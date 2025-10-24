@@ -6,7 +6,7 @@
   var card = $('card'),
       openB = $('open'),
       closeB = $('close'),
-      nextB = $('next'),   // new button for Page 2
+      nextB = $('next'),
       timer = null;
 
   openB.addEventListener('click', function () {
@@ -27,7 +27,6 @@
     }, 1000);
   });
 
-  // 👉 Open the second page
   if (nextB) {
     nextB.addEventListener('click', function () {
       window.location.href = "page2.html";
