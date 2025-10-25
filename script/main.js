@@ -303,62 +303,76 @@ const animationTimeline = () => {
   const replyBtn = document.getElementById("replay");
 
   replyBtn.addEventListener("click", () => {
-      // Tạo nền đen cho toàn màn hình
-      const overlay = document.createElement("div");
-      overlay.style.position = "fixed";
-      overlay.style.top = "0";
-      overlay.style.left = "0";
-      overlay.style.width = "100%";
-      overlay.style.height = "100%";
-      overlay.style.backgroundColor = "black";
-      overlay.style.zIndex = "999";
-      document.body.appendChild(overlay);
-  
-      // Tạo thẻ video
-      const video = document.createElement("video");
-      video.src = "gift2/short.mp4";
-      video.controls = true;
-      video.style.position = "fixed";
-      video.style.top = "50%";
-      video.style.left = "50%";
-      video.style.transform = "translate(-50%, -50%)";
-      video.style.zIndex = "1000";
-      document.body.appendChild(video);
-  
-      video.play();
-  
-      // Tạo nút "Click to Next" (ẩn ban đầu)
-      const nextBtn = document.createElement("button");
-      nextBtn.textContent = "💟Click to Next💟";
-      nextBtn.style.position = "fixed";
-      nextBtn.style.bottom = "20px";
-      nextBtn.style.right = "20px";
-      nextBtn.style.padding = "10px 20px";
-      nextBtn.style.backgroundColor = "white";
-      nextBtn.style.color = "black";
-      nextBtn.style.border = "none";
-      nextBtn.style.fontSize = "16px";
-      nextBtn.style.cursor = "pointer";
-      nextBtn.style.zIndex = "1001";
-      nextBtn.style.display = "none"; // Ẩn nút ban đầu
-      document.body.appendChild(nextBtn);
-  
-      let isFirstPlay = true; // Biến kiểm tra lần phát đầu tiên
-  
-      // Hiển thị nút sau khi video kết thúc lần đầu tiên
-      video.addEventListener("ended", () => {
-          if (isFirstPlay) {
-              nextBtn.style.display = "block"; // Hiện nút sau khi video kết thúc lần đầu
-              isFirstPlay = false; // Đánh dấu là đã qua lần phát đầu
-          }
-          video.play(); // Tự động phát lại video
-      });
-  
-      // Khi click vào nút, chuyển sang index3.html
-      nextBtn.addEventListener("click", () => {
-          window.location.href = "gift3/index3.html";
-      });
+  // Create a full black overlay
+  const overlay = document.createElement("div");
+  overlay.style.position = "fixed";
+  overlay.style.top = "0";
+  overlay.style.left = "0";
+  overlay.style.width = "100%";
+  overlay.style.height = "100%";
+  overlay.style.backgroundColor = "black";
+  overlay.style.zIndex = "999";
+  document.body.appendChild(overlay);
+
+  // Create the first video
+  const video1 = document.createElement("video");
+  video1.src = "gift2/short.mp4";  // your first video
+  video1.controls = true;
+  video1.style.position = "fixed";
+  video1.style.top = "50%";
+  video1.style.left = "50%";
+  video1.style.transform = "translate(-50%, -50%)";
+  video1.style.zIndex = "1000";
+  document.body.appendChild(video1);
+
+  // Play the first video
+  video1.play();
+
+  // Create the second video (hidden at first)
+  const video2 = document.createElement("video");
+  video2.src = "gift2/gift2.mp4";  // your second video path
+  video2.controls = true;
+  video2.style.position = "fixed";
+  video2.style.top = "50%";
+  video2.style.left = "50%";
+  video2.style.transform = "translate(-50%, -50%)";
+  video2.style.zIndex = "1000";
+  video2.style.display = "none"; // hide initially
+  document.body.appendChild(video2);
+
+  // Create "Next" button (hidden initially)
+  const nextBtn = document.createElement("button");
+  nextBtn.textContent = "💟 Click to Next 💟";
+  nextBtn.style.position = "fixed";
+  nextBtn.style.bottom = "20px";
+  nextBtn.style.right = "20px";
+  nextBtn.style.padding = "10px 20px";
+  nextBtn.style.backgroundColor = "white";
+  nextBtn.style.color = "black";
+  nextBtn.style.border = "none";
+  nextBtn.style.fontSize = "16px";
+  nextBtn.style.cursor = "pointer";
+  nextBtn.style.zIndex = "1001";
+  nextBtn.style.display = "none";
+  document.body.appendChild(nextBtn);
+
+  // When Video 1 ends → play Video 2
+  video1.addEventListener("ended", () => {
+    video1.style.display = "none"; // hide first video
+    video2.style.display = "block"; // show second
+    video2.play(); // start second
   });
+
+  // When Video 2 ends → show Next button
+  video2.addEventListener("ended", () => {
+    nextBtn.style.display = "block";
+  });
+
+  // On "Next" click → go to next card
+  nextBtn.addEventListener("click", () => {
+    window.location.href = "gift3/index3.html";
+  });
+});
   
 };
 
