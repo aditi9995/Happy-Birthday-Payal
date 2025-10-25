@@ -303,105 +303,111 @@ const animationTimeline = () => {
   const replyBtn = document.getElementById("replay");
 
   replyBtn.addEventListener("click", () => {
-  // Create fullscreen black overlay
+  // overlay
   const overlay = document.createElement("div");
-  overlay.style.position = "fixed";
-  overlay.style.top = "0";
-  overlay.style.left = "0";
-  overlay.style.width = "100%";
-  overlay.style.height = "100%";
-  overlay.style.backgroundColor = "black";
-  overlay.style.zIndex = "9999";
-  overlay.style.display = "flex";
-  overlay.style.justifyContent = "center";
-  overlay.style.alignItems = "center";
+  Object.assign(overlay.style, {
+    position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
+    backgroundColor: "black", zIndex: 9999, display: "flex",
+    justifyContent: "center", alignItems: "center"
+  });
   document.body.appendChild(overlay);
 
-  // --- Create video element ---
+  // single video element
   const video = document.createElement("video");
-  video.src = "short.mp4"; // 🔹 first video
   video.controls = false;
   video.autoplay = false;
-  video.muted = false;
+  video.muted = false; // keep sound; iPhone needs one user gesture
   video.playsInline = true;
   video.setAttribute("webkit-playsinline", "true");
-  video.style.width = "100%";
-  video.style.height = "100%";
-  video.style.objectFit = "contain"; // full vertical fit
+  Object.assign(video.style, {
+    width: "100%", height: "100%", objectFit: "contain", zIndex: 10000
+  });
   overlay.appendChild(video);
 
-  // --- Create first "Next" button (hidden initially) ---
-  const nextBtn1 = document.createElement("button");
-  nextBtn1.textContent = "Next ▶️";
-  nextBtn1.style.position = "fixed";
-  nextBtn1.style.bottom = "25px";
-  nextBtn1.style.left = "50%";
-  nextBtn1.style.transform = "translateX(-50%)";
-  nextBtn1.style.padding = "12px 24px";
-  nextBtn1.style.backgroundColor = "#fff";
-  nextBtn1.style.color = "#000";
-  nextBtn1.style.border = "none";
-  nextBtn1.style.borderRadius = "8px";
-  nextBtn1.style.fontSize = "16px";
-  nextBtn1.style.cursor = "pointer";
-  nextBtn1.style.display = "none";
-  nextBtn1.style.zIndex = "10001";
-  overlay.appendChild(nextBtn1);
-
-  // --- Create second "Next" button (hidden initially) ---
-  const nextBtn2 = document.createElement("button");
-  nextBtn2.textContent = "💖 Go to Card 💖";
-  nextBtn2.style.position = "fixed";
-  nextBtn2.style.bottom = "25px";
-  nextBtn2.style.left = "50%";
-  nextBtn2.style.transform = "translateX(-50%)";
-  nextBtn2.style.padding = "12px 24px";
-  nextBtn2.style.backgroundColor = "#fff";
-  nextBtn2.style.color = "#000";
-  nextBtn2.style.border = "none";
-  nextBtn2.style.borderRadius = "8px";
-  nextBtn2.style.fontSize = "16px";
-  nextBtn2.style.cursor = "pointer";
-  nextBtn2.style.display = "none";
-  nextBtn2.style.zIndex = "10001";
-  overlay.appendChild(nextBtn2);
-
-  // iPhone autoplay fix — start on first tap
-  const startVideo = () => {
-    overlay.removeEventListener("click", startVideo);
-    const playPromise = video.play();
-    if (playPromise !== undefined) {
-      playPromise.catch(() => {
-        console.log("Waiting for user gesture on iPhone");
-        overlay.addEventListener("click", () => video.play(), { once: true });
-      });
-    }
+  // buttons
+  const makeBtn = (text) => {
+    const b = document.createElement("button");
+    b.textContent = text;
+    Object.assign(b.style, {
+      position: "fixed", bottom: "25px", left: "50%", transform: "translateX(-50%)",
+      padding: "12px 24px", backgroundColor: "#fff", color: "#000",
+      border: "none", borderRadius: "8px", fontSize: "16px", cursor: "pointer",
+      zIndex: 10001, display: "none"
+    });
+    overlay.appendChild(b);
+    return b;
   };
-  overlay.addEventListener("click", startVideo, { once: true });
+  const nextBtn1 = makeBtn("▶ Next to Video 2");
+  const nextBtn2 = makeBtn("💖 Go to Card");
 
-  // --- When first video ends ---
-  video.addEventListener("ended", () => {
-    nextBtn1.style.display = "block";
-  });
+  // state: 1 = playing first, 2 = playing second
+  let state = 0;
 
-  // --- On first Next click → play second video ---
-  nextBtn1.addEventListener("click", () => {
-    nextBtn1.style.display = "none";
-    video.src = "gift2.mp4"; // 🔹 second video
-    video.play();
-  });
+  // helper: start playing a source (handles Safari quirks)
+  const playSource = (src) => {
+    state = (src.includes("gift2") || src.includes("second")) ? 2 : 1;
+    // set and load
+    video.pause();
+    video.removeAttribute('src');
+    video.src = src;
+    video.load();
 
-  // --- When second video ends → show final Next button ---
-  video.addEventListener("ended", () => {
-    if (video.src.includes("gift2.mp4")) {
+    // small delay helps Safari accept the new source
+    setTimeout(() => {
+      const p = video.play();
+      if (p !== undefined) {
+        p.catch((err) => {
+          // autoplay blocked — wait for a user tap on overlay
+          console.log("play() blocked:", err);
+          overlay.addEventListener("click", function onTap() {
+            overlay.removeEventListener("click", onTap);
+            video.play().catch(e => console.warn("play still blocked:", e));
+          }, { once: true });
+        });
+      }
+    }, 120); // 100-200ms works for many Safari versions
+  };
+
+  // iPhone/Android: require the initial tap to allow audio playback
+  const beginOnTap = () => {
+    overlay.removeEventListener("click", beginOnTap);
+    // start first video (change this filename if needed)
+    playSource("short.mp4");
+  };
+  overlay.addEventListener("click", beginOnTap, { once: true });
+
+  // when video ends, decide what to show/do
+  const onEnded = () => {
+    if (state === 1) {
+      // first video finished -> show Next button 1
+      nextBtn1.style.display = "block";
+    } else if (state === 2) {
+      // second finished -> show final Next button
       nextBtn2.style.display = "block";
     }
+  };
+  video.addEventListener("ended", onEnded);
+
+  // Next button 1: play second video
+  nextBtn1.addEventListener("click", () => {
+    nextBtn1.style.display = "none";
+    // start second video (file on GH Pages is gift2.mp4 / gift2.mp4)
+    playSource("gift2.mp4");
   });
 
-  // --- Go to card page ---
+  // Next button 2: go to card
   nextBtn2.addEventListener("click", () => {
     window.location.href = "gift3/index3.html";
   });
+
+  // defensive cleanup if user navigates away from overlay
+  const removeOverlay = () => {
+    video.pause();
+    video.src = "";
+    overlay.remove();
+    window.removeEventListener("beforeunload", removeOverlay);
+  };
+  window.addEventListener("beforeunload", removeOverlay);
 });
   
 };
