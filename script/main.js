@@ -303,121 +303,62 @@ const animationTimeline = () => {
   const replyBtn = document.getElementById("replay");
 
   replyBtn.addEventListener("click", () => {
-  // overlay
-  const overlay = document.createElement("div");
-  Object.assign(overlay.style, {
-    position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
-    backgroundColor: "black", zIndex: 9999, display: "flex",
-    justifyContent: "center", alignItems: "center"
+      // Tạo nền đen cho toàn màn hình
+      const overlay = document.createElement("div");
+      overlay.style.position = "fixed";
+      overlay.style.top = "0";
+      overlay.style.left = "0";
+      overlay.style.width = "100%";
+      overlay.style.height = "100%";
+      overlay.style.backgroundColor = "black";
+      overlay.style.zIndex = "999";
+      document.body.appendChild(overlay);
+  
+      // Tạo thẻ video
+      //const video = document.createElement("video");
+      //video.src = "gift2/gift2.mp4";
+      //video.controls = true;
+      //video.style.position = "fixed";
+      //video.style.top = "50%";
+      //video.style.left = "50%";
+      //video.style.transform = "translate(-50%, -50%)";
+      //video.style.zIndex = "1000";
+      //document.body.appendChild(video);
+  
+      //video.play();
+  
+      // Tạo nút "Click to Next" (ẩn ban đầu)
+      const nextBtn = document.createElement("button");
+      nextBtn.textContent = "💟Click to Next💟";
+      nextBtn.style.position = "fixed";
+      nextBtn.style.bottom = "20px";
+      nextBtn.style.right = "20px";
+      nextBtn.style.padding = "10px 20px";
+      nextBtn.style.backgroundColor = "white";
+      nextBtn.style.color = "black";
+      nextBtn.style.border = "none";
+      nextBtn.style.fontSize = "16px";
+      nextBtn.style.cursor = "pointer";
+      nextBtn.style.zIndex = "1001";
+      nextBtn.style.display = "none"; // Ẩn nút ban đầu
+      document.body.appendChild(nextBtn);
+  
+      let isFirstPlay = true; // Biến kiểm tra lần phát đầu tiên
+  
+      // Hiển thị nút sau khi video kết thúc lần đầu tiên
+      video.addEventListener("ended", () => {
+          if (isFirstPlay) {
+              nextBtn.style.display = "block"; // Hiện nút sau khi video kết thúc lần đầu
+              isFirstPlay = false; // Đánh dấu là đã qua lần phát đầu
+          }
+          video.play(); // Tự động phát lại video
+      });
+  
+      // Khi click vào nút, chuyển sang index3.html
+      nextBtn.addEventListener("click", () => {
+          window.location.href = "gift3/index3.html";
+      });
   });
-  document.body.appendChild(overlay);
-
-  // single video element
-  const video = document.createElement("video");
-  video.controls = false;
-  video.autoplay = false;
-  video.muted = false;
-  video.playsInline = true;
-  video.setAttribute("webkit-playsinline", "true");
-  Object.assign(video.style, {
-    width: "100%", height: "100%", objectFit: "contain", zIndex: 10000
-  });
-  overlay.appendChild(video);
-
-  // function to create a button
-  const makeBtn = (text) => {
-    const b = document.createElement("button");
-    b.textContent = text;
-    Object.assign(b.style, {
-      position: "fixed", bottom: "25px", left: "50%", transform: "translateX(-50%)",
-      padding: "12px 24px", backgroundColor: "#fff", color: "#000",
-      border: "none", borderRadius: "8px", fontSize: "16px", cursor: "pointer",
-      zIndex: 10001, display: "none"
-    });
-    overlay.appendChild(b);
-    return b;
-  };
-  const nextBtn1 = makeBtn("▶ Next to Video 2");
-  const nextBtn2 = makeBtn("💖 Go to Card");
-
-  let state = 0; // 1 = first video, 2 = second video
-
-  // helper: play video source safely
-  const playSource = (src) => {
-    state = src.includes("gift2") ? 2 : 1;
-    video.pause();
-    video.removeAttribute("src");
-    video.src = src;
-    video.load();
-
-    // safety: skip to card if video fails to load within 6s
-    const timeout = setTimeout(() => {
-      console.warn(`${src} not playing — skipping to card`);
-      skipToCard();
-    }, 6000);
-
-    // attempt to play after a short delay
-    setTimeout(() => {
-      const playPromise = video.play();
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => clearTimeout(timeout))
-          .catch((err) => {
-            console.warn("Autoplay blocked or failed:", err);
-            clearTimeout(timeout);
-            // fallback: tap overlay to start
-            overlay.addEventListener("click", function onTap() {
-              overlay.removeEventListener("click", onTap);
-              video.play().catch(() => skipToCard());
-            }, { once: true });
-          });
-      }
-    }, 150);
-  };
-
-  // function to skip directly to card
-  const skipToCard = () => {
-    window.location.href = "gift3/index3.html";
-  };
-
-  // first video trigger
-  const beginOnTap = () => {
-    overlay.removeEventListener("click", beginOnTap);
-    playSource("short.mp4"); // your first video
-  };
-  overlay.addEventListener("click", beginOnTap, { once: true });
-
-  // handle video end
-  video.addEventListener("ended", () => {
-    if (state === 1) {
-      nextBtn1.style.display = "block";
-    } else if (state === 2) {
-      nextBtn2.style.display = "block";
-    }
-  });
-
-  // handle playback errors
-  video.addEventListener("error", () => {
-    console.error("Video playback error:", video.src);
-    skipToCard();
-  });
-
-  // button: go to second video
-  nextBtn1.addEventListener("click", () => {
-    nextBtn1.style.display = "none";
-    playSource("gift2.mp4"); // your second video
-  });
-
-  // button: go to card
-  nextBtn2.addEventListener("click", skipToCard);
-
-  // cleanup
-  window.addEventListener("beforeunload", () => {
-    video.pause();
-    video.src = "";
-    overlay.remove();
-  });
-});
   
 };
 
