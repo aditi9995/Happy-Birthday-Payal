@@ -316,7 +316,7 @@ const animationTimeline = () => {
   const video = document.createElement("video");
   video.controls = false;
   video.autoplay = false;
-  video.muted = false; // keep sound; iPhone needs one user gesture
+  video.muted = false;
   video.playsInline = true;
   video.setAttribute("webkit-playsinline", "true");
   Object.assign(video.style, {
@@ -324,7 +324,7 @@ const animationTimeline = () => {
   });
   overlay.appendChild(video);
 
-  // buttons
+  // function to create a button
   const makeBtn = (text) => {
     const b = document.createElement("button");
     b.textContent = text;
@@ -340,74 +340,83 @@ const animationTimeline = () => {
   const nextBtn1 = makeBtn("▶ Next to Video 2");
   const nextBtn2 = makeBtn("💖 Go to Card");
 
-  // state: 1 = playing first, 2 = playing second
-  let state = 0;
+  let state = 0; // 1 = first video, 2 = second video
 
-  // helper: start playing a source (handles Safari quirks)
+  // helper: play video source safely
   const playSource = (src) => {
-    state = (src.includes("gift2") || src.includes("second")) ? 2 : 1;
-    // set and load
+    state = src.includes("gift2") ? 2 : 1;
     video.pause();
-    video.removeAttribute('src');
+    video.removeAttribute("src");
     video.src = src;
     video.load();
 
-    // small delay helps Safari accept the new source
+    // safety: skip to card if video fails to load within 6s
+    const timeout = setTimeout(() => {
+      console.warn(`${src} not playing — skipping to card`);
+      skipToCard();
+    }, 6000);
+
+    // attempt to play after a short delay
     setTimeout(() => {
-      const p = video.play();
-      if (p !== undefined) {
-        p.catch((err) => {
-          // autoplay blocked — wait for a user tap on overlay
-          console.log("play() blocked:", err);
-          overlay.addEventListener("click", function onTap() {
-            overlay.removeEventListener("click", onTap);
-            video.play().catch(e => console.warn("play still blocked:", e));
-          }, { once: true });
-        });
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => clearTimeout(timeout))
+          .catch((err) => {
+            console.warn("Autoplay blocked or failed:", err);
+            clearTimeout(timeout);
+            // fallback: tap overlay to start
+            overlay.addEventListener("click", function onTap() {
+              overlay.removeEventListener("click", onTap);
+              video.play().catch(() => skipToCard());
+            }, { once: true });
+          });
       }
-    }, 120); // 100-200ms works for many Safari versions
+    }, 150);
   };
 
-  // iPhone/Android: require the initial tap to allow audio playback
+  // function to skip directly to card
+  const skipToCard = () => {
+    window.location.href = "gift3/index3.html";
+  };
+
+  // first video trigger
   const beginOnTap = () => {
     overlay.removeEventListener("click", beginOnTap);
-    // start first video (change this filename if needed)
-    playSource("short.mp4");
+    playSource("short.mp4"); // your first video
   };
   overlay.addEventListener("click", beginOnTap, { once: true });
 
-  // when video ends, decide what to show/do
-  const onEnded = () => {
+  // handle video end
+  video.addEventListener("ended", () => {
     if (state === 1) {
-      // first video finished -> show Next button 1
       nextBtn1.style.display = "block";
     } else if (state === 2) {
-      // second finished -> show final Next button
       nextBtn2.style.display = "block";
     }
-  };
-  video.addEventListener("ended", onEnded);
+  });
 
-  // Next button 1: play second video
+  // handle playback errors
+  video.addEventListener("error", () => {
+    console.error("Video playback error:", video.src);
+    skipToCard();
+  });
+
+  // button: go to second video
   nextBtn1.addEventListener("click", () => {
     nextBtn1.style.display = "none";
-    // start second video (file on GH Pages is gift2.mp4 / gift2.mp4)
-    playSource("gift2.mp4");
+    playSource("gift2.mp4"); // your second video
   });
 
-  // Next button 2: go to card
-  nextBtn2.addEventListener("click", () => {
-    window.location.href = "gift3/index3.html";
-  });
+  // button: go to card
+  nextBtn2.addEventListener("click", skipToCard);
 
-  // defensive cleanup if user navigates away from overlay
-  const removeOverlay = () => {
+  // cleanup
+  window.addEventListener("beforeunload", () => {
     video.pause();
     video.src = "";
     overlay.remove();
-    window.removeEventListener("beforeunload", removeOverlay);
-  };
-  window.addEventListener("beforeunload", removeOverlay);
+  });
 });
   
 };
