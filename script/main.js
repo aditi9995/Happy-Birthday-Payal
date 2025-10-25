@@ -316,7 +316,7 @@ const animationTimeline = () => {
   
       // Tạo thẻ video
       const video = document.createElement("video");
-      video.src = "gift2/gift2.mp4";
+      video.src = "gift2/short.mp4";
       video.controls = true;
       video.style.position = "fixed";
       video.style.top = "50%";
