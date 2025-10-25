@@ -303,7 +303,7 @@ const animationTimeline = () => {
   const replyBtn = document.getElementById("replay");
 
   replyBtn.addEventListener("click", () => {
-  // Black overlay
+  // Black fullscreen overlay
   const overlay = document.createElement("div");
   overlay.style.position = "fixed";
   overlay.style.top = "0";
@@ -311,83 +311,88 @@ const animationTimeline = () => {
   overlay.style.width = "100%";
   overlay.style.height = "100%";
   overlay.style.backgroundColor = "black";
-  overlay.style.zIndex = "999";
+  overlay.style.zIndex = "9999";
+  overlay.style.display = "flex";
+  overlay.style.justifyContent = "center";
+  overlay.style.alignItems = "center";
   document.body.appendChild(overlay);
 
-  // First video
-  const video1 = document.createElement("video");
-  video1.src = "gift2/short.mp4"; // ✅ check this file exists
-  video1.controls = true;
-  video1.autoplay = true;
-  video1.muted = false;
-  video1.playsInline = true;
-  video1.style.position = "fixed";
-  video1.style.top = "50%";
-  video1.style.left = "50%";
-  video1.style.transform = "translate(-50%, -50%)";
-  video1.style.zIndex = "1000";
-  video1.style.maxWidth = "100%";
-  video1.style.maxHeight = "100%";
-  document.body.appendChild(video1);
+  // Helper to create video
+  const createVideo = (src) => {
+    const video = document.createElement("video");
+    video.src = src;
+    video.controls = false;
+    video.autoplay = false;
+    video.muted = false;
+    video.playsInline = true;
+    video.style.width = "100%";
+    video.style.height = "100%";
+    video.style.objectFit = "contain"; // ✅ show full video, no crop
+    video.style.display = "none";
+    video.style.zIndex = "10000";
+    overlay.appendChild(video);
+    return video;
+  };
 
-  // Second video (hidden initially)
-  const video2 = document.createElement("video");
-  video2.src = "gift2/second.mp4"; // ✅ replace with your actual second video name
-  video2.controls = true;
-  video2.autoplay = false; // we’ll start manually
-  video2.muted = false;
-  video2.playsInline = true;
-  video2.style.position = "fixed";
-  video2.style.top = "50%";
-  video2.style.left = "50%";
-  video2.style.transform = "translate(-50%, -50%)";
-  video2.style.zIndex = "1000";
-  video2.style.display = "none";
-  video2.style.maxWidth = "100%";
-  video2.style.maxHeight = "100%";
-  document.body.appendChild(video2);
+  const video1 = createVideo("gift2/short.mp4");   // first video
+  const video2 = createVideo("gift2/gift2.mp4");  // second video
 
-  // "Next" button (hidden)
+  // Next button (hidden initially)
   const nextBtn = document.createElement("button");
   nextBtn.textContent = "💟 Click to Next 💟";
   nextBtn.style.position = "fixed";
-  nextBtn.style.bottom = "20px";
-  nextBtn.style.right = "20px";
-  nextBtn.style.padding = "10px 20px";
-  nextBtn.style.backgroundColor = "white";
-  nextBtn.style.color = "black";
+  nextBtn.style.bottom = "30px";
+  nextBtn.style.left = "50%";
+  nextBtn.style.transform = "translateX(-50%)";
+  nextBtn.style.padding = "12px 20px";
+  nextBtn.style.backgroundColor = "#fff";
+  nextBtn.style.color = "#000";
   nextBtn.style.border = "none";
+  nextBtn.style.borderRadius = "8px";
   nextBtn.style.fontSize = "16px";
+  nextBtn.style.fontFamily = "Poppins, sans-serif";
   nextBtn.style.cursor = "pointer";
-  nextBtn.style.zIndex = "1001";
   nextBtn.style.display = "none";
-  document.body.appendChild(nextBtn);
+  nextBtn.style.zIndex = "10001";
+  overlay.appendChild(nextBtn);
 
-  // When first video ends → play second video
+  // iOS fix: start video only after first tap
+  const startVideos = () => {
+    overlay.removeEventListener("click", startVideos);
+
+    video1.style.display = "block";
+    const play1 = video1.play();
+
+    // fallback if Safari blocks autoplay
+    if (play1 !== undefined) {
+      play1.catch(() => {
+        console.log("Autoplay blocked on iPhone — waiting for tap");
+        overlay.addEventListener("click", () => video1.play(), { once: true });
+      });
+    }
+  };
+  overlay.addEventListener("click", startVideos, { once: true });
+
+  // When video1 ends → play video2
   video1.addEventListener("ended", () => {
-    video1.pause();
     video1.style.display = "none";
     video2.style.display = "block";
 
-    // ✅ ensure playback is triggered by user gesture
-    const playPromise = video2.play();
-    if (playPromise !== undefined) {
-      playPromise.catch((error) => {
-        console.log("Autoplay blocked, waiting for tap...");
-        // if blocked, tap screen to play
-        overlay.addEventListener("click", () => {
-          video2.play();
-        }, { once: true });
+    const play2 = video2.play();
+    if (play2 !== undefined) {
+      play2.catch(() => {
+        overlay.addEventListener("click", () => video2.play(), { once: true });
       });
     }
   });
 
-  // When second video ends → show Next button
+  // When video2 ends → show button
   video2.addEventListener("ended", () => {
+    video2.style.display = "none";
     nextBtn.style.display = "block";
   });
 
-  // On Next click → go to next page
+  // On Next click → go to card
   nextBtn.addEventListener("click", () => {
     window.location.href = "gift3/index3.html";
   });
