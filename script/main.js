@@ -335,7 +335,7 @@ const animationTimeline = () => {
   };
 
   const video1 = createVideo("gift2/short.mp4");   // first video
-  const video2 = createVideo("gift2/gift2.mp4");  // second video
+  const video2 = createVideo("gift2/gift222.mp4");  // second video
 
   // Next button (hidden initially)
   const nextBtn = document.createElement("button");
