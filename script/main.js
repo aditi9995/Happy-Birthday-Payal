@@ -303,7 +303,7 @@ const animationTimeline = () => {
   const replyBtn = document.getElementById("replay");
 
   replyBtn.addEventListener("click", () => {
-  // Create a full black overlay
+  // Black overlay
   const overlay = document.createElement("div");
   overlay.style.position = "fixed";
   overlay.style.top = "0";
@@ -314,33 +314,40 @@ const animationTimeline = () => {
   overlay.style.zIndex = "999";
   document.body.appendChild(overlay);
 
-  // Create the first video
+  // First video
   const video1 = document.createElement("video");
-  video1.src = "gift2/short.mp4";  // your first video
+  video1.src = "gift2/short.mp4"; // ✅ check this file exists
   video1.controls = true;
+  video1.autoplay = true;
+  video1.muted = false;
+  video1.playsInline = true;
   video1.style.position = "fixed";
   video1.style.top = "50%";
   video1.style.left = "50%";
   video1.style.transform = "translate(-50%, -50%)";
   video1.style.zIndex = "1000";
+  video1.style.maxWidth = "100%";
+  video1.style.maxHeight = "100%";
   document.body.appendChild(video1);
 
-  // Play the first video
-  video1.play();
-
-  // Create the second video (hidden at first)
+  // Second video (hidden initially)
   const video2 = document.createElement("video");
-  video2.src = "gift2/gift2.mp4";  // your second video path
+  video2.src = "gift2/second.mp4"; // ✅ replace with your actual second video name
   video2.controls = true;
+  video2.autoplay = false; // we’ll start manually
+  video2.muted = false;
+  video2.playsInline = true;
   video2.style.position = "fixed";
   video2.style.top = "50%";
   video2.style.left = "50%";
   video2.style.transform = "translate(-50%, -50%)";
   video2.style.zIndex = "1000";
-  video2.style.display = "none"; // hide initially
+  video2.style.display = "none";
+  video2.style.maxWidth = "100%";
+  video2.style.maxHeight = "100%";
   document.body.appendChild(video2);
 
-  // Create "Next" button (hidden initially)
+  // "Next" button (hidden)
   const nextBtn = document.createElement("button");
   nextBtn.textContent = "💟 Click to Next 💟";
   nextBtn.style.position = "fixed";
@@ -356,19 +363,31 @@ const animationTimeline = () => {
   nextBtn.style.display = "none";
   document.body.appendChild(nextBtn);
 
-  // When Video 1 ends → play Video 2
+  // When first video ends → play second video
   video1.addEventListener("ended", () => {
-    video1.style.display = "none"; // hide first video
-    video2.style.display = "block"; // show second
-    video2.play(); // start second
+    video1.pause();
+    video1.style.display = "none";
+    video2.style.display = "block";
+
+    // ✅ ensure playback is triggered by user gesture
+    const playPromise = video2.play();
+    if (playPromise !== undefined) {
+      playPromise.catch((error) => {
+        console.log("Autoplay blocked, waiting for tap...");
+        // if blocked, tap screen to play
+        overlay.addEventListener("click", () => {
+          video2.play();
+        }, { once: true });
+      });
+    }
   });
 
-  // When Video 2 ends → show Next button
+  // When second video ends → show Next button
   video2.addEventListener("ended", () => {
     nextBtn.style.display = "block";
   });
 
-  // On "Next" click → go to next card
+  // On Next click → go to next page
   nextBtn.addEventListener("click", () => {
     window.location.href = "gift3/index3.html";
   });
