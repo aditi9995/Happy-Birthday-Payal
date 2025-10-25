@@ -315,17 +315,17 @@ const animationTimeline = () => {
       document.body.appendChild(overlay);
   
       // Tạo thẻ video
-      //const video = document.createElement("video");
-      //video.src = "gift2/gift2.mp4";
-      //video.controls = true;
-      //video.style.position = "fixed";
-      //video.style.top = "50%";
-      //video.style.left = "50%";
-      //video.style.transform = "translate(-50%, -50%)";
-      //video.style.zIndex = "1000";
-      //document.body.appendChild(video);
+      const video = document.createElement("video");
+      video.src = "gift2/short.mp4";
+      video.controls = true;
+      video.style.position = "fixed";
+      video.style.top = "50%";
+      video.style.left = "50%";
+      video.style.transform = "translate(-50%, -50%)";
+      video.style.zIndex = "1000";
+      document.body.appendChild(video);
   
-      //video.play();
+      video.play();
   
       // Tạo nút "Click to Next" (ẩn ban đầu)
       const nextBtn = document.createElement("button");
